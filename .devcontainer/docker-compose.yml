@@ -1,0 +1,46 @@
+services:
+  legal-dashboard:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        UBUNTU_VARIANT: "24.04"
+        PYTHON_VERSION: "3.12"
+        NODE_VERSION: "22.0.0"
+        NVM_VERSION: "v0.40.1"
+        USERNAME: ${USERNAME}
+        USER_UID: "1000"
+        USER_GID: "1000"
+        UV_VERSION: "0.5.7"
+        PROJDIR: "/workspaces/legal-dashboard"
+        PROJECT_NAME: "legal-dashboard"
+    command: sleep infinity
+    environment:
+      MONGO_DB: 'legal_dashboard'
+      MONGO_USER: 'develop'
+      MONGO_PASSWORD: 'password456'
+      MONGO_HOST: 'mongo'
+      MONGO_PORT: '27017'
+    volumes:
+      - ..:/workspaces/legal-dashboard:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/${USERNAME}/.docker:/home/${USERNAME}/.docker
+      - /home/${USERNAME}/.bash_history:/home/${USERNAME}/.bash_history
+      - /home/${USERNAME}/.cache:/home/${USERNAME}/.cache
+    links:
+      - mongo
+
+  mongo:
+    image: mongo:7.0-jammy
+    ports:
+      - "27017:27017"
+    volumes:
+      - /data/mounts/mongo_legal_dashboard:/data/db
+      - ../mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=legal_dashboard
+      - MONGO_USER=develop
+      - MONGO_PASSWORD=password456
+    restart: always
